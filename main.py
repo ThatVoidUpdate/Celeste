@@ -163,7 +163,7 @@ async def Parse(message: discord.Message) -> None:
             JsonDetails[str(message.author.id)]['last_daily'] = time.time()
 
             with open("userDetails.json", "w") as details:
-                    details.write(json.dumps(JsonDetails))
+                details.write(json.dumps(JsonDetails))
 
             await message.channel.send(f":information_source: You can use this command once daily, and each day in a row you use it, you'll get more and more money. But if you miss a day, your streak goes back to 0. Today you got ${Daily_Base_Amount}, and your multiplier is `1x`")
 
@@ -219,7 +219,7 @@ async def Parse(message: discord.Message) -> None:
             JsonDetails[str(message.author.id)]['balance'] += lootAmount
 
             with open("userDetails.json", "w") as details:
-                    details.write(json.dumps(JsonDetails))
+                details.write(json.dumps(JsonDetails))
 
             await message.channel.send(f":information_source: You can use this command once every 5 mins to search through chat for any money (anywhere from $1 to ${Loot_Max}). This time you got ${lootAmount}")
 
@@ -237,7 +237,7 @@ async def Parse(message: discord.Message) -> None:
 
             else:
                 await message.channel.send(f":x: Too soon! (You can only use this command every 5 mins)")
-            
+
 
     """
     Inventory - View inventory
@@ -254,18 +254,18 @@ async def Parse(message: discord.Message) -> None:
 
         with open("items.json", "r") as details: #Load the item details
             AllItems = json.loads(details.read())
-            
+
         if not userInventory:
-            await message.channel.send(f"{message.author.name}, you have no items") 
+            await message.channel.send(f"{message.author.name}, you have no items")
             return
 
         ret = f"{message.author.name}, your inventory is:\n"
         for RawItem in userInventory:
             if RawItem[0] in AllItems['items']:
                 ret += f":{AllItems['items'][RawItem[0]]['emoji']}: {AllItems['items'][RawItem[0]]['name']} x {RawItem[1]['quantity']}\n"
-        
+
         await message.channel.send(ret)
-    
+
     """
     Mine - Mine for ores/minerals. Requires a pickaxe
     """
@@ -286,19 +286,19 @@ async def Parse(message: discord.Message) -> None:
         for RawItem in userInventory:
             if AllItems['items'][RawItem[0]]['type'] == "pickaxe":
                 pickaxeItem = (RawItem[0], AllItems['items'][RawItem[0]])
-        
-        if pickaxeItem == None:
+
+        if pickaxeItem is None:
             await message.channel.send(f":x: You own no pickaxes")
             return
 
         #we have the last pickaxe item in the user's inventory
         #randomly choose an ore or mineral to mine
         mineable = []
-        
+
         for RawItem in [(k, v) for k, v in AllItems['items'].items()]:
             if RawItem[1]['type'] == "ore" or RawItem[1]['type'] == "mineral":
                 mineable.append(RawItem)
-        
+
         if not mineable:
             await message.channel.send(f":bangbang: A dev screwed up, there are no minable items")
             return
@@ -312,7 +312,7 @@ async def Parse(message: discord.Message) -> None:
 
         JsonDetails[str(message.author.id)]['inventory'][pickaxeItem[0]]['durability'] -= 1
 
-        
+
 
         ret = f"You got :{result[1]['emoji']}: {result[1]['name']}!\n"
         if JsonDetails[str(message.author.id)]['inventory'][pickaxeItem[0]]['durability'] == 0:
@@ -343,7 +343,7 @@ async def Parse(message: discord.Message) -> None:
             return
 
         with open("items.json", "r") as details: #Load the item details
-                AllItems = json.loads(details.read())
+            AllItems = json.loads(details.read())
 
         if len(message.content.split(" ")) == 1:
             #view market
@@ -356,7 +356,7 @@ async def Parse(message: discord.Message) -> None:
 
         elif len(message.content.split(" ")) == 3:
             #buy/sell
-            
+
             if message.content.split(" ")[1] == "buy":
                 if message.content.split(" ")[2] in AllItems['items']:
                     if int(JsonDetails[str(message.author.id)]['balance']) >= AllItems['items'][message.content.split(" ")[2]]['cost']:
@@ -374,7 +374,7 @@ async def Parse(message: discord.Message) -> None:
                         await message.channel.send(f"Successfully bought {AllItems['items'][message.content.split(' ')[2]]['name']} for ${AllItems['items'][message.content.split(' ')[2]]['cost']}")
 
                     else:
-                        await message.channel.send(":x: Sorry, you don't have enough money for that")    
+                        await message.channel.send(":x: Sorry, you don't have enough money for that")
                 else:
                     await message.channel.send(f":x: Item \"{message.content.split(' ')[2]}\" doesn't exist")
 
