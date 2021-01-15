@@ -3,6 +3,27 @@ import discord
 
 import config
 
+async def MarketParent(message: discord.Message) -> None:
+    
+    with open("userDetails.json", "r") as details: #Load the user details
+        JsonDetails = json.loads(details.read())
+
+    if str(message.author.id) not in JsonDetails:
+        await message.channel.send(f"{message.author.name}, you don't have an account yet. Run `{config.CommandPrefix}account` to set one up, then try this command again")
+        return
+
+    if len(message.content.split(" ")) == 1:
+        await MarketView(message)
+
+    elif len(message.content.split(" ")) == 3:
+        #buy/sell
+
+        if message.content.split(" ")[1] == "buy":
+            await MarketBuy(message)
+
+        elif message.content.split(" ")[1] == "sell":
+            await MarketSell(message)
+
 async def MarketView(message: discord.Message) -> None:
 
     #Load the details of all the items
