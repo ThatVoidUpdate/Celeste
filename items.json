@@ -2,8 +2,8 @@
     {
         "basic_pickaxe":{"name": "Basic Pickaxe", "description": "A basic pickaxe, used for mining", "emoji": "pick", "cost": 150, "type": "pickaxe", "item_data": {"durability": 100}},
         "diamond_pickaxe":{"name": "Diamond Pickaxe", "description": "A more durable pickaxe, can be used for lots of mining", "emoji": "pick", "cost": 500, "type": "pickaxe", "item_data": {"durability": 500}},
-        "basic_axe":{"name": "Basic Axe", "description": "A basic axe, used for cutting down trees", "emoji": "pick", "cost": 150, "type": "axe", "item_data": {"durability": 100}},
-        "diamond_axe":{"name": "Diamond Axe", "description": "A more durable axe, used for cutting down lots of trees", "emoji": "pick", "cost": 500, "type": "axe", "item_data": {"durability": 500}},
+        "basic_axe":{"name": "Basic Axe", "description": "A basic axe, used for cutting down trees", "emoji": "axe", "cost": 150, "type": "axe", "item_data": {"durability": 100}},
+        "diamond_axe":{"name": "Diamond Axe", "description": "A more durable axe, used for cutting down lots of trees", "emoji": "axe", "cost": 500, "type": "axe", "item_data": {"durability": 500}},
         "hiking_boots":{"name": "Hiking Boots", "description": "A sturdy pair of boots, ideal for going exploring", "emoji": "hiking_boot", "cost": 200, "type": "clothing", "item_data": {}},
         "iron_ore":{"name": "Iron Ore", "description": "Can be smelted to get ingots", "emoji": "rock", "cost": 200, "type": "ore", "item_data": {}},
         "gold_ore":{"name": "Gold Ore", "description": "Can be smelted to get ingots", "emoji": "rock", "cost": 300, "type": "ore", "item_data": {}},

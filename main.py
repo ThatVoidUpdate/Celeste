@@ -9,8 +9,7 @@ import discord
 import creds
 import config
 import marketCommands
-
-defaultUserDict = {"balance": 0, "daily_multiplier": 1, "last_daily": 0, "last_loot": 0, "inventory":{}}
+import accountCommands
 
 logging.basicConfig(level=logging.INFO)
 
@@ -52,20 +51,20 @@ async def Parse(message: discord.Message) -> None:
     Help - lists all commands
     """
     if message.content[len(config.CommandPrefix):].startswith('help'):
-        ret = """Help:
-`hello` - Test command, simply says hello
-`account` - Sets up an account for use with commands that require money
-`balance` - View your balance
-`hug <mention> [mention]` - Hugs another user. Keep adding mentions to hug more people
-`daily` - Collect yuor daily money reward
-`loot` - Scour the recent messages for money
-`inventory` - View your inventory
-`mine` - Use your pickaxe to mine for ores and minerals
-`market` - View the market
-`market buy <item>` - Buy an item
-`market sell <item>` - Sell an item 
-"""
-        await message.channel.send(ret)
+        embed = discord.Embed(title=f"Help", description=f"")
+        embed.add_field(name=f"Hello - `{config.CommandPrefix}hello`", value=f"A test command, simply replies hello", inline=False)
+        embed.add_field(name=f"Account - `{config.CommandPrefix}account`", value=f"Sets up an account for using commands to do with money", inline=False)
+        embed.add_field(name=f"Balance - `{config.CommandPrefix}balance`", value=f"View account balance", inline=False)
+        embed.add_field(name=f"Hug - `{config.CommandPrefix}hug <mention>`", value=f"Hugs a user. Keep adding mentions to do a bigger group hug", inline=False)
+        embed.add_field(name=f"Daily - `{config.CommandPrefix}daily`", value=f"Collect your daily money reward", inline=False)
+        embed.add_field(name=f"Loot - `{config.CommandPrefix}loot`", value=f"Searches the recent messages for money", inline=False)
+        embed.add_field(name=f"Inventory - `{config.CommandPrefix}inventory`", value=f"View your inventory", inline=False)
+        embed.add_field(name=f"Mine - `{config.CommandPrefix}mine`", value=f"Mines for minerals and ores", inline=False)
+        embed.add_field(name=f"Market - `{config.CommandPrefix}market`", value=f"Views the market prices", inline=False)
+        embed.add_field(name=f"Market Buy - `{config.CommandPrefix}market buy <item>`", value=f"Buys 1 of an item on the market", inline=False)
+        embed.add_field(name=f"Market Sell - `{config.CommandPrefix}market sell <item>`", value=f"Sells 1 of an item on the market", inline=False)
+
+        await message.channel.send(embed=embed)
 
     """
     Shutdown - Full shutdown of the bot
@@ -93,34 +92,13 @@ async def Parse(message: discord.Message) -> None:
     Account - Command to create an account
     """
     if message.content[len(config.CommandPrefix):].startswith("account"):
-        with open("userDetails.json", "r") as details: #Load the user details
-            JsonDetails = json.loads(details.read())
-
-        if str(message.author.id) in JsonDetails:
-            await message.channel.send(f"You already have an account")
-            return
-
-        JsonDetails[str(message.author.id)] = defaultUserDict
-
-        with open("userDetails.json", "w") as details:
-            details.write(json.dumps(JsonDetails))
-
-        await message.channel.send(f"Successfully created an account for {message.author.name}")
+        await accountCommands.CreateAccount(message)
 
     """
     Balance - Command to check account balance. If user has no account, one will be created
     """
     if message.content[len(config.CommandPrefix):].startswith("balance"):
-        print(f"Attempting to check balance for user id {message.author.id}")
-
-        with open("userDetails.json", "r") as details: #Load the user details
-            JsonDetails = json.loads(details.read())
-
-        if str(message.author.id) not in JsonDetails:
-            await message.channel.send(f"{message.author.name}, you don't have an account yet. Run `{config.CommandPrefix}account` to set one up, then try this command again")
-            return
-
-        await message.channel.send(f":information_source: {message.author.name}, your balance is ${JsonDetails[str(message.author.id)]['balance']}")
+        await accountCommands.ViewBalance(message)
 
     """
     Hug - Hug another user. Implement random gif from giphy
@@ -236,28 +214,7 @@ async def Parse(message: discord.Message) -> None:
     Inventory - View inventory
     """
     if message.content[len(config.CommandPrefix):].startswith("inventory"):
-        with open("userDetails.json", "r") as details: #Load the user details
-            JsonDetails = json.loads(details.read())
-
-        if str(message.author.id) not in JsonDetails:
-            await message.channel.send(f"{message.author.name}, you don't have an account yet. Run `{config.CommandPrefix}account` to set one up, then try this command again")
-            return
-
-        userInventory = [(k, v) for k, v in JsonDetails[str(message.author.id)]['inventory'].items()]
-
-        with open("items.json", "r") as details: #Load the item details
-            AllItems = json.loads(details.read())
-
-        if not userInventory:
-            await message.channel.send(f"{message.author.name}, you have no items")
-            return
-
-        ret = f"{message.author.name}, your inventory is:\n"
-        for RawItem in userInventory:
-            if RawItem[0] in AllItems['items']:
-                ret += f":{AllItems['items'][RawItem[0]]['emoji']}: {AllItems['items'][RawItem[0]]['name']} x {RawItem[1]['quantity']}\n"
-
-        await message.channel.send(ret)
+        await accountCommands.ViewInventory(message)
 
     """
     Mine - Mine for ores/minerals. Requires a pickaxe

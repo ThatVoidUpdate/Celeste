@@ -10,7 +10,7 @@ async def MarketView(message: discord.Message) -> None:
         AllItems = json.loads(details.read())
 
     #Start creating a message to reply with
-    embed = discord.Embed(title="Market", description=f"Here are all the items that you can buy and sell. To buy an item, use `{config.CommandPrefix}market buy <item name in grey box>`")
+    embed = discord.Embed(title="Market", description=f"Here are all the items that you can buy and sell\nTo buy an item, use `{config.CommandPrefix}market buy <item name in grey box>`\nTo sell an item, use `{config.CommandPrefix}market sell <item name in grey box>`")
 
     #For every item in existence, add its etails to the market listing
     for item in [(k, v) for k, v in AllItems['items'].items()]:
