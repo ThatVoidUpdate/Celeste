@@ -6,18 +6,9 @@ import time
 import random
 import discord
 import creds
+import config
 
-CommandPrefix = "$"
 defaultUserDict = {"balance": 0, "daily_multiplier": 1, "last_daily": 0, "last_loot": 0, "inventory":{}}
-
-AdminUsers = [311955960803622912]
-
-#Money settings
-Daily_Base_Amount = 120
-Daily_Multiplier_Increment = 1
-
-Loot_Max = 100
-
 
 logging.basicConfig(level=logging.INFO)
 
@@ -27,7 +18,7 @@ client = discord.Client()
 async def on_ready() -> None:
     print('We have logged in as {0.user}'.format(client))
 
-    activity = discord.Activity(name=f"{CommandPrefix}help", type=discord.ActivityType.playing)
+    activity = discord.Activity(name=f"{config.CommandPrefix}help", type=discord.ActivityType.playing)
     await client.change_presence(activity=activity)
 
 @client.event
@@ -35,7 +26,7 @@ async def on_message(message: discord.Message) -> None:
     if message.author == client.user:
         return
 
-    if message.content.startswith(CommandPrefix):
+    if message.content.startswith(config.CommandPrefix):
         await Parse(message)
 
 @client.event
@@ -52,13 +43,13 @@ async def Parse(message: discord.Message) -> None:
     """
     Hello - Test command, replies with "Hello!"
     """
-    if message.content[len(CommandPrefix):].startswith('hello'):
+    if message.content[len(config.CommandPrefix):].startswith('hello'):
         await message.channel.send('Hello!')
 
     """
     Help - lists all commands
     """
-    if message.content[len(CommandPrefix):].startswith('help'):
+    if message.content[len(config.CommandPrefix):].startswith('help'):
         ret = """Help:
 `hello` - Test command, simply says hello
 `account` - Sets up an account for use with commands that require money
@@ -77,8 +68,8 @@ async def Parse(message: discord.Message) -> None:
     """
     Shutdown - Full shutdown of the bot
     """
-    if message.content[len(CommandPrefix):].startswith("shutdown"):
-        if message.author.id in AdminUsers:
+    if message.content[len(config.CommandPrefix):].startswith("shutdown"):
+        if message.author.id in config.AdminUsers:
             await message.channel.send('Shutting down')
             await client.logout()
         else:
@@ -87,8 +78,8 @@ async def Parse(message: discord.Message) -> None:
     """
     Restart - Restarts the bot
     """
-    if message.content[len(CommandPrefix):].startswith("restart"):
-        if message.author.id in AdminUsers:
+    if message.content[len(config.CommandPrefix):].startswith("restart"):
+        if message.author.id in config.AdminUsers:
             await message.channel.send('Restarting')
             await client.logout()
             os.startfile(sys.argv[0])
@@ -99,7 +90,7 @@ async def Parse(message: discord.Message) -> None:
     """
     Account - Command to create an account
     """
-    if message.content[len(CommandPrefix):].startswith("account"):
+    if message.content[len(config.CommandPrefix):].startswith("account"):
         with open("userDetails.json", "r") as details: #Load the user details
             JsonDetails = json.loads(details.read())
 
@@ -117,14 +108,14 @@ async def Parse(message: discord.Message) -> None:
     """
     Balance - Command to check account balance. If user has no account, one will be created
     """
-    if message.content[len(CommandPrefix):].startswith("balance"):
+    if message.content[len(config.CommandPrefix):].startswith("balance"):
         print(f"Attempting to check balance for user id {message.author.id}")
 
         with open("userDetails.json", "r") as details: #Load the user details
             JsonDetails = json.loads(details.read())
 
         if str(message.author.id) not in JsonDetails:
-            await message.channel.send(f"{message.author.name}, you don't have an account yet. Run `{CommandPrefix}account` to set one up, then try this command again")
+            await message.channel.send(f"{message.author.name}, you don't have an account yet. Run `{config.CommandPrefix}account` to set one up, then try this command again")
             return
 
         await message.channel.send(f":information_source: {message.author.name}, your balance is ${JsonDetails[str(message.author.id)]['balance']}")
@@ -132,7 +123,7 @@ async def Parse(message: discord.Message) -> None:
     """
     Hug - Hug another user. Implement random gif from giphy
     """
-    if message.content[len(CommandPrefix):].startswith("hug"):
+    if message.content[len(config.CommandPrefix):].startswith("hug"):
         if not message.mentions:
             await message.channel.send(f"You need to mention at least 1 user")
         elif len(message.mentions) == 1:
@@ -141,16 +132,16 @@ async def Parse(message: discord.Message) -> None:
             await message.channel.send(f"**{', '.join([x.name for x in message.mentions])}**, you have all been hugged by **{message.author.name}**")
 
     """
-    Daily - base amount of $Daily_Base_Amount, multiplier increases by 1 each day, resets if not run for more than a day
+    Daily - base amount of $config.Daily_Base_Amount, multiplier increases by 1 each day, resets if not run for more than a day
     """
-    if message.content[len(CommandPrefix):].startswith("daily"):
+    if message.content[len(config.CommandPrefix):].startswith("daily"):
         #get last daily interaction of user
 
         with open("userDetails.json", "r") as details: #Load the user details
             JsonDetails = json.loads(details.read())
 
         if str(message.author.id) not in JsonDetails:
-            await message.channel.send(f"{message.author.name}, you don't have an account yet. Run `{CommandPrefix}account` to set one up, then try this command again")
+            await message.channel.send(f"{message.author.name}, you don't have an account yet. Run `{config.CommandPrefix}account` to set one up, then try this command again")
             return
 
         currentEpochTime = time.time()
@@ -159,53 +150,53 @@ async def Parse(message: discord.Message) -> None:
 
         if int(JsonDetails[str(message.author.id)]['last_daily']) == 0:
             JsonDetails[str(message.author.id)]['daily_multiplier'] = 1
-            JsonDetails[str(message.author.id)]['balance'] += Daily_Base_Amount
+            JsonDetails[str(message.author.id)]['balance'] += config.Daily_Base_Amount
             JsonDetails[str(message.author.id)]['last_daily'] = time.time()
 
             with open("userDetails.json", "w") as details:
                 details.write(json.dumps(JsonDetails))
 
-            await message.channel.send(f":information_source: You can use this command once daily, and each day in a row you use it, you'll get more and more money. But if you miss a day, your streak goes back to 0. Today you got ${Daily_Base_Amount}, and your multiplier is `1x`")
+            await message.channel.send(f":information_source: You can use this command once daily, and each day in a row you use it, you'll get more and more money. But if you miss a day, your streak goes back to 0. Today you got ${config.Daily_Base_Amount}, and your multiplier is `1x`")
 
         else:
 
             if differenceTup.tm_mday == 2:
-                JsonDetails[str(message.author.id)]['daily_multiplier'] += Daily_Multiplier_Increment
+                JsonDetails[str(message.author.id)]['daily_multiplier'] += config.Daily_Multiplier_Increment
                 print(JsonDetails[str(message.author.id)]['daily_multiplier'])
-                JsonDetails[str(message.author.id)]['balance'] += Daily_Base_Amount * JsonDetails[str(message.author.id)]['daily_multiplier']
+                JsonDetails[str(message.author.id)]['balance'] += config.Daily_Base_Amount * JsonDetails[str(message.author.id)]['daily_multiplier']
                 JsonDetails[str(message.author.id)]['last_daily'] = time.time()
 
                 with open("userDetails.json", "w") as details:
                     details.write(json.dumps(JsonDetails))
 
-                await message.channel.send(f":moneybag: Congrats! You get ${Daily_Base_Amount * JsonDetails[str(message.author.id)]['daily_multiplier']}, and your multiplier is now `{JsonDetails[str(message.author.id)]['daily_multiplier']}x`")
+                await message.channel.send(f":moneybag: Congrats! You get ${config.Daily_Base_Amount * JsonDetails[str(message.author.id)]['daily_multiplier']}, and your multiplier is now `{JsonDetails[str(message.author.id)]['daily_multiplier']}x`")
 
 
             elif differenceTup.tm_mday > 2 or differenceTup.tm_mon > 1 or differenceTup.tm_year > 1970:
                 JsonDetails[str(message.author.id)]['daily_multiplier'] = 1
-                JsonDetails[str(message.author.id)]['balance'] += Daily_Base_Amount
+                JsonDetails[str(message.author.id)]['balance'] += config.Daily_Base_Amount
                 JsonDetails[str(message.author.id)]['last_daily'] = time.time()
 
                 with open("userDetails.json", "w") as details:
                     details.write(json.dumps(JsonDetails))
 
-                await message.channel.send(f":moneybag: Aww dang, you waited too long =(. You get ${Daily_Base_Amount}, and your daily multiplier is now `1x`")
+                await message.channel.send(f":moneybag: Aww dang, you waited too long =(. You get ${config.Daily_Base_Amount}, and your daily multiplier is now `1x`")
 
             else:
                 await message.channel.send(f":x: Too soon! (You can only use this command every 24 hours)")
 
 
     """
-    Loot - randomly generates between $0 and $Loot_Max with a minimum time between messages
+    Loot - randomly generates between $0 and $config.Loot_Max with a minimum time between messages
     """
-    if message.content[len(CommandPrefix):].startswith("loot"):
+    if message.content[len(config.CommandPrefix):].startswith("loot"):
         #get last daily interaction of user
 
         with open("userDetails.json", "r") as details: #Load the user details
             JsonDetails = json.loads(details.read())
 
         if str(message.author.id) not in JsonDetails:
-            await message.channel.send(f"{message.author.name}, you don't have an account yet. Run `{CommandPrefix}account` to set one up, then try this command again")
+            await message.channel.send(f"{message.author.name}, you don't have an account yet. Run `{config.CommandPrefix}account` to set one up, then try this command again")
             return
 
         currentEpochTime = time.time()
@@ -213,7 +204,7 @@ async def Parse(message: discord.Message) -> None:
         differenceTup = time.localtime(timeDifference)
 
         if int(JsonDetails[str(message.author.id)]['last_daily']) == 0:
-            lootAmount = random.randint(1, Loot_Max)
+            lootAmount = random.randint(1, config.Loot_Max)
 
             JsonDetails[str(message.author.id)]['last_loot'] = time.time()
             JsonDetails[str(message.author.id)]['balance'] += lootAmount
@@ -221,11 +212,11 @@ async def Parse(message: discord.Message) -> None:
             with open("userDetails.json", "w") as details:
                 details.write(json.dumps(JsonDetails))
 
-            await message.channel.send(f":information_source: You can use this command once every 5 mins to search through chat for any money (anywhere from $1 to ${Loot_Max}). This time you got ${lootAmount}")
+            await message.channel.send(f":information_source: You can use this command once every 5 mins to search through chat for any money (anywhere from $1 to ${config.Loot_Max}). This time you got ${lootAmount}")
 
         else:
             if differenceTup.tm_min > 5 or differenceTup.tm_hour > 0 or differenceTup.tm_mday > 1 or differenceTup.tm_mon > 1 or differenceTup.tm_year > 1970:
-                lootAmount = random.randint(1, Loot_Max)
+                lootAmount = random.randint(1, config.Loot_Max)
 
                 JsonDetails[str(message.author.id)]['last_loot'] = time.time()
                 JsonDetails[str(message.author.id)]['balance'] += lootAmount
@@ -242,12 +233,12 @@ async def Parse(message: discord.Message) -> None:
     """
     Inventory - View inventory
     """
-    if message.content[len(CommandPrefix):].startswith("inventory"):
+    if message.content[len(config.CommandPrefix):].startswith("inventory"):
         with open("userDetails.json", "r") as details: #Load the user details
             JsonDetails = json.loads(details.read())
 
         if str(message.author.id) not in JsonDetails:
-            await message.channel.send(f"{message.author.name}, you don't have an account yet. Run `{CommandPrefix}account` to set one up, then try this command again")
+            await message.channel.send(f"{message.author.name}, you don't have an account yet. Run `{config.CommandPrefix}account` to set one up, then try this command again")
             return
 
         userInventory = [(k, v) for k, v in JsonDetails[str(message.author.id)]['inventory'].items()]
@@ -269,12 +260,12 @@ async def Parse(message: discord.Message) -> None:
     """
     Mine - Mine for ores/minerals. Requires a pickaxe
     """
-    if message.content[len(CommandPrefix):].startswith("mine"):
+    if message.content[len(config.CommandPrefix):].startswith("mine"):
         with open("userDetails.json", "r") as details: #Load the user details
             JsonDetails = json.loads(details.read())
 
         if str(message.author.id) not in JsonDetails:
-            await message.channel.send(f"{message.author.name}, you don't have an account yet. Run `{CommandPrefix}account` to set one up, then try this command again")
+            await message.channel.send(f"{message.author.name}, you don't have an account yet. Run `{config.CommandPrefix}account` to set one up, then try this command again")
             return
 
         with open("items.json", "r") as details: #Load the item details
@@ -333,13 +324,13 @@ async def Parse(message: discord.Message) -> None:
         Market Buy <item> - buy an item
         Market Sell <item> - sell an item
     """
-    if message.content[len(CommandPrefix):].startswith("market"):
+    if message.content[len(config.CommandPrefix):].startswith("market"):
 
         with open("userDetails.json", "r") as details: #Load the user details
             JsonDetails = json.loads(details.read())
 
         if str(message.author.id) not in JsonDetails:
-            await message.channel.send(f"{message.author.name}, you don't have an account yet. Run `{CommandPrefix}account` to set one up, then try this command again")
+            await message.channel.send(f"{message.author.name}, you don't have an account yet. Run `{config.CommandPrefix}account` to set one up, then try this command again")
             return
 
         with open("items.json", "r") as details: #Load the item details
@@ -347,7 +338,7 @@ async def Parse(message: discord.Message) -> None:
 
         if len(message.content.split(" ")) == 1:
             #view market
-            ret = f"Market\nTo buy items, use `{CommandPrefix}market buy <item name in grey box>`\n"
+            ret = f"Market\nTo buy items, use `{config.CommandPrefix}market buy <item name in grey box>`\n"
 
             for item in [(k, v) for k, v in AllItems['items'].items()]:
                 ret += f":{item[1]['emoji']}: {item[1]['name']}: {item[1]['description']} - `{item[0]}` - ${item[1]['cost']}\n"
