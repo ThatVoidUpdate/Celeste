@@ -5,8 +5,10 @@ import json
 import time
 import random
 import discord
+
 import creds
 import config
+import marketCommands
 
 defaultUserDict = {"balance": 0, "daily_multiplier": 1, "last_daily": 0, "last_loot": 0, "inventory":{}}
 
@@ -337,57 +339,16 @@ async def Parse(message: discord.Message) -> None:
             AllItems = json.loads(details.read())
 
         if len(message.content.split(" ")) == 1:
-            #view market
-            ret = f"Market\nTo buy items, use `{config.CommandPrefix}market buy <item name in grey box>`\n"
-
-            for item in [(k, v) for k, v in AllItems['items'].items()]:
-                ret += f":{item[1]['emoji']}: {item[1]['name']}: {item[1]['description']} - `{item[0]}` - ${item[1]['cost']}\n"
-
-            await message.channel.send(ret)
+            await marketCommands.MarketView(message)
 
         elif len(message.content.split(" ")) == 3:
             #buy/sell
 
             if message.content.split(" ")[1] == "buy":
-                if message.content.split(" ")[2] in AllItems['items']:
-                    if int(JsonDetails[str(message.author.id)]['balance']) >= AllItems['items'][message.content.split(" ")[2]]['cost']:
-                        #set item key to item_data value in inventory, then splice in quantity
-                        if message.content.split(" ")[2] in JsonDetails[str(message.author.id)]['inventory']:
-                            #just add to quantity
-                            JsonDetails[str(message.author.id)]['inventory'][message.content.split(" ")[2]]['quantity'] += 1
-                        else:
-                            #we need to construct the item
-                            JsonDetails[str(message.author.id)]['inventory'][message.content.split(" ")[2]] = AllItems['items'][message.content.split(" ")[2]]['item_data']
-                            JsonDetails[str(message.author.id)]['inventory'][message.content.split(" ")[2]]['quantity'] = 1
-
-                        JsonDetails[str(message.author.id)]['balance'] -= AllItems['items'][message.content.split(" ")[2]]['cost']
-
-                        await message.channel.send(f"Successfully bought {AllItems['items'][message.content.split(' ')[2]]['name']} for ${AllItems['items'][message.content.split(' ')[2]]['cost']}")
-
-                    else:
-                        await message.channel.send(":x: Sorry, you don't have enough money for that")
-                else:
-                    await message.channel.send(f":x: Item \"{message.content.split(' ')[2]}\" doesn't exist")
+                await marketCommands.MarketBuy(message)
 
             elif message.content.split(" ")[1] == "sell":
-                if message.content.split(" ")[2] in AllItems['items']:
-                    if message.content.split(' ')[2] in JsonDetails[str(message.author.id)]['inventory']:
-                        JsonDetails[str(message.author.id)]['inventory'][message.content.split(" ")[2]]['quantity'] -= 1
-
-                        if JsonDetails[str(message.author.id)]['inventory'][message.content.split(" ")[2]]['quantity'] == 0:
-                            del JsonDetails[str(message.author.id)]['inventory'][message.content.split(" ")[2]]
-
-                        JsonDetails[str(message.author.id)]['balance'] += AllItems['items'][message.content.split(" ")[2]]['cost']
-
-                        await message.channel.send(f"Successfully sold {AllItems['items'][message.content.split(' ')[2]]['name']} for ${AllItems['items'][message.content.split(' ')[2]]['cost']}")
-
-                    else:
-                        await message.channel.send(f":x: You dont have any {message.content.split(' ')[2]}")
-                else:
-                    await message.channel.send(f":x: Item \"{message.content.split(' ')[2]}\" doesn't exist")
-
-        with open("userDetails.json", "w") as details:
-            details.write(json.dumps(JsonDetails))
+                await marketCommands.MarketSell(message)
 
 
 client.run(creds.SecretKey)
