@@ -63,6 +63,7 @@ async def Mine(message: discord.Message) -> None:
     await message.channel.send(ret)
 
 async def Chop(message: discord.Message) -> None:
+    #Check user has account
     with open("userDetails.json", "r") as details: #Load the user details
         JsonDetails = json.loads(details.read())
 
@@ -70,6 +71,7 @@ async def Chop(message: discord.Message) -> None:
         await message.channel.send(f"{message.author.name}, you don't have an account yet. Run `{config.CommandPrefix}account` to set one up, then try this command again")
         return
 
+    #Check user has axe
     with open("items.json", "r") as details: #Load the item details
         AllItems = json.loads(details.read())
 
@@ -83,19 +85,28 @@ async def Chop(message: discord.Message) -> None:
     if axeItem is None:
         await message.channel.send(f":x: You own no axes")
         return
+
+    #find all possible chop results
+    PossibleResults = [x for x in AllItems['items'] if 'chop_chance' in AllItems['items'][x]['item_data']]
+    ChopChances = [(x, float(AllItems['items'][x]['item_data']['chop_chance'])) for x in PossibleResults]
     
-    woodAmount = random.randint(1, 3)
-
-    if 'wood' in JsonDetails[str(message.author.id)]['inventory']:
-        JsonDetails[str(message.author.id)]['inventory']['wood']['quantity'] += woodAmount
-    else:
-        JsonDetails[str(message.author.id)]['inventory']['wood'] = {"quantity": woodAmount}
-
-    JsonDetails[str(message.author.id)]['inventory'][axeItem[0]]['durability'] -= 1
-
+    ChopResults = [x[0] for x in ChopChances if random.uniform(0, 1) < x[1]]
     
+    #Give the user the items
+    for item in ChopResults:
 
-    ret = f"You got {woodAmount} wood!\n"
+        if item in JsonDetails[str(message.author.id)]['inventory']:
+            JsonDetails[str(message.author.id)]['inventory'][item]['quantity'] += 1
+        else:
+            JsonDetails[str(message.author.id)]['inventory'][item] = {"quantity": 1}
+
+        JsonDetails[str(message.author.id)]['inventory'][axeItem[0]]['durability'] -= 1
+
+    ret = f"You chopped down some trees, and got:\n"
+
+    for item in ChopResults:
+        ret += f"{AllItems['items'][item]['name']} x1\n"
+
     if JsonDetails[str(message.author.id)]['inventory'][axeItem[0]]['durability'] == 0:
         ret += "Sadly your axe broke"
         del JsonDetails[str(message.author.id)]['inventory'][axeItem[0]]
@@ -103,6 +114,7 @@ async def Chop(message: discord.Message) -> None:
     else:
         ret += f"Your axe now has {JsonDetails[str(message.author.id)]['inventory'][axeItem[0]]['durability']} uses left"
 
+    #Write the changes back to disk
     with open("userDetails.json", "w") as details:
         details.write(json.dumps(JsonDetails))
 

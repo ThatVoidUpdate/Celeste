@@ -12,8 +12,8 @@
         "gold_ingot":{"name": "Gold Ingot", "description": "An ingot of gold", "emoji": "yellow_square", "cost": 600, "type": "ingot", "item_data": {}},
         "tin_ingot":{"name": "Tin Ingot", "description": "An ingot of tin", "emoji": "white_large_square", "cost": 300, "type": "ingot", "item_data": {}},
         "granite":{"name": "Granite", "description": "Just a rock", "emoji": "rock", "cost": 50, "type": "mineral", "item_data": {}},
-        "wood":{"name": "Wood", "description": "Some wood. Used for fuelling furnaces", "emoji": "wood", "cost": 50, "type": "fuel", "item_data": {}},
-        "apple":{"name": "Apple", "description": "A tasty apple", "emoji": "apple", "cost": 150, "type": "food", "item_data": {}},
-        "chestnut":{"name": "Chestnut", "description": "A small nut", "emoji": "chestnut", "cost": 0, "type": "food", "item_data": {}}
+        "wood":{"name": "Wood", "description": "Some wood. Used for fuelling furnaces", "emoji": "wood", "cost": 50, "type": "fuel", "item_data": {"chop_chance":1}},
+        "apple":{"name": "Apple", "description": "A tasty apple", "emoji": "apple", "cost": 150, "type": "food", "item_data": {"chop_chance":0.05}},
+        "chestnut":{"name": "Chestnut", "description": "A small nut", "emoji": "chestnut", "cost": 0, "type": "food", "item_data": {"chop_chance":0.01}}
     }
 }

@@ -95,7 +95,7 @@ async def MarketSell(message: discord.Message) -> None:
             if JsonDetails[str(message.author.id)]['inventory'][message.content.split(" ")[2]]['quantity'] == 0: #if there are none left, remove the item from the inventory entirely
                 del JsonDetails[str(message.author.id)]['inventory'][message.content.split(" ")[2]]
 
-            JsonDetails[str(message.author.id)]['balance'] += AllItems['items'][message.content.split(" ")[2]]['cost'] #Give the money
+            JsonDetails[str(message.author.id)]['balance'] =str(int(JsonDetails[str(message.author.id)]['balance']) + AllItems['items'][message.content.split(" ")[2]]['cost']) #Give the money
 
             #Send a confirmation message
             await message.channel.send(f"Successfully sold {AllItems['items'][message.content.split(' ')[2]]['name']} for ${AllItems['items'][message.content.split(' ')[2]]['cost']}")
