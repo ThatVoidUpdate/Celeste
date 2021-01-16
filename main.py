@@ -29,7 +29,8 @@ commands = {
     "loot": moneyCommands.Loot,
     "inventory": accountCommands.ViewInventory,
     "hug": actionCommands.Hug,
-    "market": marketCommands.MarketParent
+    "market": marketCommands.MarketParent,
+    "giveitem": accountCommands.GiveItem
 }
 
 @client.event
@@ -53,7 +54,6 @@ async def on_reaction_add(reaction: discord.Reaction, user: discord.Member) -> N
         print("Someone reacted to a message we sent")
         AllReactors = await reaction.users().flatten()
         #await reaction.message.channel.send(f"Thanks {' '.join([x.name for x in AllReactors])}")
-
 
 async def Parse(message: discord.Message) -> None:
     print(f"Command recieved: {message.content}. Sent in channel {message.channel}")
@@ -84,7 +84,5 @@ async def Parse(message: discord.Message) -> None:
             sys.exit()
         else:
             await message.channel.send('Sorry, you dont have permission to do that')
-
-
 
 client.run(creds.SecretKey)

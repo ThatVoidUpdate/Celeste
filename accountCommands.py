@@ -51,3 +51,62 @@ async def ViewInventory(message: discord.Message) -> None:
             embed.add_field(name=f":{AllItems['items'][RawItem[0]]['emoji']}: {AllItems['items'][RawItem[0]]['name']} x{RawItem[1]['quantity']}", value=f"{AllItems['items'][RawItem[0]]['description']}\nWorth ${AllItems['items'][RawItem[0]]['cost']}\n`{RawItem[0]}`", inline=True)
 
     await message.channel.send(embed=embed)
+
+async def GiveItem(message: discord.Message) -> None:
+    #check user has account
+    with open("userDetails.json", "r") as details: #Load the user details
+        JsonDetails = json.loads(details.read())
+
+    if str(message.author.id) not in JsonDetails:
+        await message.channel.send(f"{message.author.name}, you don't have an account yet. Run `{config.CommandPrefix}account` to set one up, then try this command again")
+        return
+
+    #check correct amount of arguments were passed
+    if len(message.content.split(' ')) != 3:
+        await message.channel.send(f":x: Either no item was specified, no user was specified, or too many arguments were given")
+        return
+
+    #check a user was mentioned
+    if len(message.mentions) != 1:
+        await message.channel.send(f":x: No user was specified")
+        return
+    
+    recipient = message.mentions[0]
+
+    #check recipient has account
+    if str(recipient.id) not in JsonDetails:
+        await message.channel.send(f"{recipient.name} doesn't have an account yet. They need to run  `{config.CommandPrefix}account` to set one up, then try this command again")
+        return
+
+    #check item exists
+    itemName = [x for x in message.content.split(' ') if config.CommandPrefix not in x and "@" not in x][0]
+
+    with open("items.json", "r") as details:
+        AllItems = json.loads(details.read())
+
+    if itemName not in AllItems['items']: #Check that the item exists
+        await message.channel.send(f":x: Item \"{itemName}\" doesn't exist")
+        return
+    
+    #check user has item
+    if itemName not in JsonDetails[str(message.author.id)]['inventory']:
+        await message.channel.send(f":x: You don't have any {itemName}")
+        return
+
+    #remove 1 of item from user
+    JsonDetails[str(message.author.id)]['inventory'][itemName]['quantity'] -= 1
+
+    if JsonDetails[str(message.author.id)]['inventory'][itemName]['quantity'] == 0: #if there are none left, remove the item from the inventory entirely
+        del JsonDetails[str(message.author.id)]['inventory'][itemName]
+
+    #give 1 of item to recipient
+    if itemName in JsonDetails[str(recipient.id)]['inventory']:
+        JsonDetails[str(recipient.id)]['inventory'][itemName]['quantity'] += 1
+    else:
+        JsonDetails[str(recipient.id)]['inventory'][itemName] = {"quantity": 1}
+
+    await message.channel.send(f"{recipient.name}, {message.author.name} just gave you 1 {AllItems['items'][itemName]['name']}")
+
+    #Write all changes back to disk
+    with open("userDetails.json", "w") as details:
+        details.write(json.dumps(JsonDetails))
