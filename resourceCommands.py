@@ -28,28 +28,28 @@ async def Mine(message: discord.Message) -> None:
 
     #we have the last pickaxe item in the user's inventory
     #randomly choose an ore or mineral to mine
-    mineable = []
+    PossibleResults = [x for x in AllItems['items'] if 'mine_chance' in AllItems['items'][x]['item_data']]
+    MineChances = [(x, float(AllItems['items'][x]['item_data']['mine_chance'])) for x in PossibleResults]
+    
+    MineResults = [x[0] for x in MineChances if random.uniform(0, 1) < x[1]]
 
-    for RawItem in [(k, v) for k, v in AllItems['items'].items()]:
-        if RawItem[1]['type'] == "ore" or RawItem[1]['type'] == "mineral":
-            mineable.append(RawItem)
 
-    if not mineable:
-        await message.channel.send(f":bangbang: A dev screwed up, there are no minable items")
-        return
-
-    result = random.choice(mineable)
-
-    if result[0] in JsonDetails[str(message.author.id)]['inventory']:
-        JsonDetails[str(message.author.id)]['inventory'][result[0]]['quantity'] += 1
-    else:
-        JsonDetails[str(message.author.id)]['inventory'][result[0]] = {"quantity": 1}
+    for item in MineResults:
+        if item in JsonDetails[str(message.author.id)]['inventory']:
+            JsonDetails[str(message.author.id)]['inventory'][item]['quantity'] += 1
+        else:
+            JsonDetails[str(message.author.id)]['inventory'][item] = {"quantity": 1}
 
     JsonDetails[str(message.author.id)]['inventory'][pickaxeItem[0]]['durability'] -= 1
 
+    if not MineResults:
+        ret = "You went mining, but sadly you didnt get anything\n"
+    else:
+        ret = f"You went mining, and got:\n"
 
+        for item in MineResults:
+            ret += f"{AllItems['items'][item]['name']} x1\n"
 
-    ret = f"You got :{result[1]['emoji']}: {result[1]['name']}!\n"
     if JsonDetails[str(message.author.id)]['inventory'][pickaxeItem[0]]['durability'] == 0:
         ret += "Sadly your pickaxe broke"
         del JsonDetails[str(message.author.id)]['inventory'][pickaxeItem[0]]
@@ -57,10 +57,11 @@ async def Mine(message: discord.Message) -> None:
     else:
         ret += f"Your pickaxe now has {JsonDetails[str(message.author.id)]['inventory'][pickaxeItem[0]]['durability']} uses left"
 
+    await message.channel.send(ret)
+
     with open("userDetails.json", "w") as details:
         details.write(json.dumps(JsonDetails))
 
-    await message.channel.send(ret)
 
 async def Chop(message: discord.Message) -> None:
     #Check user has account
@@ -102,10 +103,13 @@ async def Chop(message: discord.Message) -> None:
 
         JsonDetails[str(message.author.id)]['inventory'][axeItem[0]]['durability'] -= 1
 
-    ret = f"You chopped down some trees, and got:\n"
+    if not ChopResults:
+        ret = "You went chopping, but sadly you didnt get anything\n"
+    else:
+        ret = f"You chopped down some trees, and got:\n"
 
-    for item in ChopResults:
-        ret += f"{AllItems['items'][item]['name']} x1\n"
+        for item in ChopResults:
+            ret += f"{AllItems['items'][item]['name']} x1\n"
 
     if JsonDetails[str(message.author.id)]['inventory'][axeItem[0]]['durability'] == 0:
         ret += "Sadly your axe broke"
