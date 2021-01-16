@@ -4,6 +4,8 @@ import config
 
 commands = {
     "mine":{"name": "Mine", "description": "Mines for minerals and ores"},
+    "chop":{"name": "Mine", "description": "Chops down trees to get wood"},
+    "smelt":{"name": "Mine", "description": "Smelts ores into ingots"},
     "hello":{"name": "Hello", "description": "A test command. Simply replies Hello"},
     "help":{"name": "Help", "description": "Show all the commands and how to use them"},
     "account":{"name": "Account", "description": "Set up an account to use with some commands"},

@@ -48,6 +48,6 @@ async def ViewInventory(message: discord.Message) -> None:
     embed = discord.Embed(title=f"{message.author.name}'s Inventory", description=f"")
     for RawItem in userInventory:
         if RawItem[0] in AllItems['items']:
-            embed.add_field(name=f":{AllItems['items'][RawItem[0]]['emoji']}: {AllItems['items'][RawItem[0]]['name']} x{RawItem[1]['quantity']}", value=f"{AllItems['items'][RawItem[0]]['description']}\nWorth ${AllItems['items'][RawItem[0]]['cost']}", inline=True)
+            embed.add_field(name=f":{AllItems['items'][RawItem[0]]['emoji']}: {AllItems['items'][RawItem[0]]['name']} x{RawItem[1]['quantity']}", value=f"{AllItems['items'][RawItem[0]]['description']}\nWorth ${AllItems['items'][RawItem[0]]['cost']}\n`{RawItem[0]}`", inline=True)
 
     await message.channel.send(embed=embed)
