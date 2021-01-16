@@ -20,6 +20,7 @@ client = discord.Client()
 commands = {
     "mine": resourceCommands.Mine,
     "chop": resourceCommands.Chop,
+    "smelt": resourceCommands.Smelt,
     "hello": randomCommands.Hello,
     "help": randomCommands.Help,
     "account": accountCommands.CreateAccount,
