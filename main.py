@@ -1,4 +1,3 @@
-import json
 import logging
 import os
 import sys
@@ -24,7 +23,6 @@ commands = {
     "help": randomCommands.Help,
     "account": accountCommands.CreateAccount,
     "balance": accountCommands.ViewBalance,
-    "hug": None,
     "daily": moneyCommands.Daily,
     "loot": moneyCommands.Loot,
     "inventory": accountCommands.ViewInventory,

@@ -5,7 +5,14 @@ import config
 commands = {
     "mine":{"name": "Mine", "description": "Mines for minerals and ores"},
     "hello":{"name": "Hello", "description": "A test command. Simply replies Hello"},
-    "help":{"name": "Help", "description": "Show all the commands and how to use them"}
+    "help":{"name": "Help", "description": "Show all the commands and how to use them"},
+    "account":{"name": "Account", "description": "Set up an account to use with some commands"},
+    "balance":{"name": "Balance", "description": "Show your current account balance"},
+    "daily":{"name": "Daily", "description": "Claim your daily money reward"},
+    "loot":{"name": "Loot", "description": "Search chat for any money that has been dropped"},
+    "inventory":{"name": "Inventory", "description": "View your curent inventory"},
+    "hug":{"name": "Hug", "description": "Hug another user. Keep adding users to make a bigger group hug"},
+    "market":{"name": "Market", "description": "View the market"}
 }
 
 
