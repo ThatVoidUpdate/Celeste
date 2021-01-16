@@ -70,7 +70,7 @@ async def GiveItem(message: discord.Message) -> None:
     if len(message.mentions) != 1:
         await message.channel.send(f":x: No user was specified")
         return
-    
+
     recipient = message.mentions[0]
 
     #check recipient has account
@@ -87,7 +87,7 @@ async def GiveItem(message: discord.Message) -> None:
     if itemName not in AllItems['items']: #Check that the item exists
         await message.channel.send(f":x: Item \"{itemName}\" doesn't exist")
         return
-    
+
     #check user has item
     if itemName not in JsonDetails[str(message.author.id)]['inventory']:
         await message.channel.send(f":x: You don't have any {itemName}")
@@ -129,7 +129,7 @@ async def GiveMoney(message: discord.Message) -> None:
     if len(message.mentions) != 1:
         await message.channel.send(f":x: No user was specified")
         return
-    
+
     recipient = message.mentions[0]
 
     #check recipient has account
@@ -139,7 +139,7 @@ async def GiveMoney(message: discord.Message) -> None:
 
     #check other argument was number
     amount = [x for x in message.content.split(' ') if config.CommandPrefix not in x and "@" not in x][0]
-    
+
     try:
         amount = int(amount)
     except:

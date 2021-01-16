@@ -4,7 +4,7 @@ import discord
 import config
 
 async def MarketParent(message: discord.Message) -> None:
-    
+
     with open("userDetails.json", "r") as details: #Load the user details
         JsonDetails = json.loads(details.read())
 
@@ -34,8 +34,8 @@ async def MarketView(message: discord.Message) -> None:
     embed = discord.Embed(title="Market", description=f"Here are all the items that you can buy and sell\nTo buy an item, use `{config.CommandPrefix}market buy <item name in grey box>`\nTo sell an item, use `{config.CommandPrefix}market sell <item name in grey box>`")
 
     #For every item in existence, add its etails to the market listing
-    for item in [(k, v) for k, v in AllItems['items'].items()]:
-        embed.add_field(name=f":{item[1]['emoji']}: {item[1]['name']}", value=f"{item[1]['description']} - `{item[0]}` - ${item[1]['cost']}", inline=True)
+    for item in [(k, v) for k, v in AllItems['items'].items() if v['cost'] != 0]:
+        embed.add_field(name=f":{item[1]['emoji']}: {item[1]['name']}", value=f"{item[1]['description']}\n`{item[0]}`\n${item[1]['cost']}", inline=True)
 
     embed.set_footer(text="Thanks for using Celeste")
 
@@ -53,7 +53,7 @@ async def MarketBuy(message: discord.Message) -> None:
 
     if message.content.split(" ")[2] in AllItems['items']: #Check that the item exists
 
-        if JsonDetails[str(message.author.id)]['balance'] >= AllItems['items'][message.content.split(" ")[2]]['cost']: #Check that the user has enough money to buy the item
+        if int(JsonDetails[str(message.author.id)]['balance']) >= AllItems['items'][message.content.split(" ")[2]]['cost']: #Check that the user has enough money to buy the item
             #Set item key to item_data value in inventory, then splice in quantity
             if message.content.split(" ")[2] in JsonDetails[str(message.author.id)]['inventory']:
                 #Just add to quantity
@@ -63,7 +63,7 @@ async def MarketBuy(message: discord.Message) -> None:
                 JsonDetails[str(message.author.id)]['inventory'][message.content.split(" ")[2]] = AllItems['items'][message.content.split(" ")[2]]['item_data']
                 JsonDetails[str(message.author.id)]['inventory'][message.content.split(" ")[2]]['quantity'] = 1
 
-            JsonDetails[str(message.author.id)]['balance'] -= AllItems['items'][message.content.split(" ")[2]]['cost'] #What did it cost? The price
+            JsonDetails[str(message.author.id)]['balance'] =str(int(JsonDetails[str(message.author.id)]['balance'])- AllItems['items'][message.content.split(" ")[2]]['cost']) #What did it cost? The price
 
             #Send a confirmation message
             await message.channel.send(f"Successfully bought {AllItems['items'][message.content.split(' ')[2]]['name']} for ${AllItems['items'][message.content.split(' ')[2]]['cost']}")
