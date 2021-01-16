@@ -110,3 +110,57 @@ async def GiveItem(message: discord.Message) -> None:
     #Write all changes back to disk
     with open("userDetails.json", "w") as details:
         details.write(json.dumps(JsonDetails))
+
+async def GiveMoney(message: discord.Message) -> None:
+     #check user has account
+    with open("userDetails.json", "r") as details: #Load the user details
+        JsonDetails = json.loads(details.read())
+
+    if str(message.author.id) not in JsonDetails:
+        await message.channel.send(f"{message.author.name}, you don't have an account yet. Run `{config.CommandPrefix}account` to set one up, then try this command again")
+        return
+
+    #check correct amount of arguments were passed
+    if len(message.content.split(' ')) != 3:
+        await message.channel.send(f":x: Either no amount was specified, no user was specified, or too many arguments were given")
+        return
+
+    #check a user was mentioned
+    if len(message.mentions) != 1:
+        await message.channel.send(f":x: No user was specified")
+        return
+    
+    recipient = message.mentions[0]
+
+    #check recipient has account
+    if str(recipient.id) not in JsonDetails:
+        await message.channel.send(f"{recipient.name} doesn't have an account yet. They need to run  `{config.CommandPrefix}account` to set one up, then try this command again")
+        return
+
+    #check other argument was number
+    amount = [x for x in message.content.split(' ') if config.CommandPrefix not in x and "@" not in x][0]
+    
+    try:
+        amount = int(amount)
+    except:
+        await message.channel.send(f":x: {amount} is not a number")
+        return
+
+    if amount <= 0:
+        await message.channel.send(f":x: {amount} has to be above 0")
+        return
+
+    #check user has enough money
+    if amount > int(JsonDetails[str(message.author.id)]['balance']):
+        await message.channel.send(f":x: You don't have enough money for that")
+        return
+
+    #Give the money
+    JsonDetails[str(message.author.id)]['balance'] = str(int(JsonDetails[str(message.author.id)]['balance']) - amount)
+    JsonDetails[str(recipient.id)]['balance'] = str(int(JsonDetails[str(recipient.id)]['balance']) + amount)
+
+    await message.channel.send(f"{recipient.name}, {message.author.name} just gave you ${amount}")
+
+    #Write all changes back to disk
+    with open("userDetails.json", "w") as details:
+        details.write(json.dumps(JsonDetails))

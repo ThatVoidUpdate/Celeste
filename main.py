@@ -30,7 +30,8 @@ commands = {
     "inventory": accountCommands.ViewInventory,
     "hug": actionCommands.Hug,
     "market": marketCommands.MarketParent,
-    "giveitem": accountCommands.GiveItem
+    "giveitem": accountCommands.GiveItem,
+    "givemoney": accountCommands.GiveMoney
 }
 
 @client.event
