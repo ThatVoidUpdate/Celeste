@@ -61,3 +61,49 @@ async def Mine(message: discord.Message) -> None:
         details.write(json.dumps(JsonDetails))
 
     await message.channel.send(ret)
+
+async def Chop(message: discord.Message) -> None:
+    with open("userDetails.json", "r") as details: #Load the user details
+        JsonDetails = json.loads(details.read())
+
+    if str(message.author.id) not in JsonDetails:
+        await message.channel.send(f"{message.author.name}, you don't have an account yet. Run `{config.CommandPrefix}account` to set one up, then try this command again")
+        return
+
+    with open("items.json", "r") as details: #Load the item details
+        AllItems = json.loads(details.read())
+
+    userInventory = [(k, v) for k, v in JsonDetails[str(message.author.id)]['inventory'].items()]
+
+    axeItem = None
+    for RawItem in userInventory:
+        if AllItems['items'][RawItem[0]]['type'] == "axe":
+            axeItem = (RawItem[0], AllItems['items'][RawItem[0]])
+
+    if axeItem is None:
+        await message.channel.send(f":x: You own no axes")
+        return
+    
+    woodAmount = random.randint(1, 3)
+
+    if 'wood' in JsonDetails[str(message.author.id)]['inventory']:
+        JsonDetails[str(message.author.id)]['inventory']['wood']['quantity'] += woodAmount
+    else:
+        JsonDetails[str(message.author.id)]['inventory']['wood'] = {"quantity": woodAmount}
+
+    JsonDetails[str(message.author.id)]['inventory'][axeItem[0]]['durability'] -= 1
+
+    
+
+    ret = f"You got {woodAmount} wood!\n"
+    if JsonDetails[str(message.author.id)]['inventory'][axeItem[0]]['durability'] == 0:
+        ret += "Sadly your axe broke"
+        del JsonDetails[str(message.author.id)]['inventory'][axeItem[0]]
+
+    else:
+        ret += f"Your axe now has {JsonDetails[str(message.author.id)]['inventory'][axeItem[0]]['durability']} uses left"
+
+    with open("userDetails.json", "w") as details:
+        details.write(json.dumps(JsonDetails))
+
+    await message.channel.send(ret)
