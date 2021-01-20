@@ -3,19 +3,17 @@ import random
 import discord
 
 import config
+import utility
 
 async def Mine(message: discord.Message) -> None:
-    with open("userDetails.json", "r") as details: #Load the user details
-        JsonDetails = json.loads(details.read())
-
-    if str(message.author.id) not in JsonDetails:
+    if not utility.UserHasAccount(message.author.id):
         await message.channel.send(f"{message.author.name}, you don't have an account yet. Run `{config.CommandPrefix}account` to set one up, then try this command again")
         return
 
     with open("items.json", "r") as details: #Load the item details
         AllItems = json.loads(details.read())
 
-    userInventory = [(k, v) for k, v in JsonDetails[str(message.author.id)]['inventory'].items()]
+    userInventory = utility.GetUserInventory(str(message.author.id))
 
     pickaxeItem = None
     for RawItem in userInventory:
@@ -35,12 +33,8 @@ async def Mine(message: discord.Message) -> None:
 
 
     for item in MineResults:
-        if item in JsonDetails[str(message.author.id)]['inventory']:
-            JsonDetails[str(message.author.id)]['inventory'][item]['quantity'] += 1
-        else:
-            JsonDetails[str(message.author.id)]['inventory'][item] = {"quantity": 1}
+        utility.GiveUserItem(str(message.author.id), item, 1)
 
-    JsonDetails[str(message.author.id)]['inventory'][pickaxeItem[0]]['durability'] -= 1
 
     if not MineResults:
         ret = "You went mining, but sadly you didnt get anything\n"
@@ -50,58 +44,51 @@ async def Mine(message: discord.Message) -> None:
         for item in MineResults:
             ret += f"{AllItems['items'][item]['name']} x1\n"
 
-    if JsonDetails[str(message.author.id)]['inventory'][pickaxeItem[0]]['durability'] == 0:
-        ret += "Sadly your pickaxe broke"
-        del JsonDetails[str(message.author.id)]['inventory'][pickaxeItem[0]]
+    #Remove 1 pick durability
+    utility.AdjustUserItemData(message.author.id, pickaxeItem[0], 'durability', -1)
 
+    #Check if pick broke
+    if utility.GetUserItem(message.author.id, pickaxeItem[0])[1]['durability'] == 0:
+        ret += "Sadly your pickaxe broke"
+        utility.TakeUserItem(message.author.id, pickaxeItem[0])
     else:
-        ret += f"Your pickaxe now has {JsonDetails[str(message.author.id)]['inventory'][pickaxeItem[0]]['durability']} uses left"
+        ret += f"Your pickaxe now has {utility.GetUserItem(message.author.id, pickaxeItem[0])[1]['durability']} uses left"
 
     await message.channel.send(ret)
 
-    with open("userDetails.json", "w") as details:
-        details.write(json.dumps(JsonDetails))
-
-
 async def Chop(message: discord.Message) -> None:
     #Check user has account
-    with open("userDetails.json", "r") as details: #Load the user details
-        JsonDetails = json.loads(details.read())
-
-    if str(message.author.id) not in JsonDetails:
+    if not utility.UserHasAccount(message.author.id):
         await message.channel.send(f"{message.author.name}, you don't have an account yet. Run `{config.CommandPrefix}account` to set one up, then try this command again")
         return
 
     #Check user has axe
+    userInventory = utility.GetUserInventory(str(message.author.id))
+
     with open("items.json", "r") as details: #Load the item details
         AllItems = json.loads(details.read())
 
-    userInventory = [(k, v) for k, v in JsonDetails[str(message.author.id)]['inventory'].items()]
-
     axeItem = None
     for RawItem in userInventory:
-        if AllItems['items'][RawItem[0]]['type'] == "axe":
+        if AllItems['items'][RawItem[0]]['type'] == "pickaxe":
             axeItem = (RawItem[0], AllItems['items'][RawItem[0]])
 
     if axeItem is None:
-        await message.channel.send(f":x: You own no axes")
+        await message.channel.send(f":x: You own no pickaxes")
         return
 
     #find all possible chop results
     PossibleResults = [x for x in AllItems['items'] if 'chop_chance' in AllItems['items'][x]['item_data']]
     ChopChances = [(x, float(AllItems['items'][x]['item_data']['chop_chance'])) for x in PossibleResults]
-    
+
     ChopResults = [x[0] for x in ChopChances if random.uniform(0, 1) < x[1]]
-    
+
     #Give the user the items
     for item in ChopResults:
+        utility.GiveUserItem(str(message.author.id), item, 1)
 
-        if item in JsonDetails[str(message.author.id)]['inventory']:
-            JsonDetails[str(message.author.id)]['inventory'][item]['quantity'] += 1
-        else:
-            JsonDetails[str(message.author.id)]['inventory'][item] = {"quantity": 1}
 
-        JsonDetails[str(message.author.id)]['inventory'][axeItem[0]]['durability'] -= 1
+    utility.AdjustUserItemData(message.author.id, axeItem[0], 'durability', -1)
 
     if not ChopResults:
         ret = "You went chopping, but sadly you didnt get anything\n"
@@ -111,20 +98,19 @@ async def Chop(message: discord.Message) -> None:
         for item in ChopResults:
             ret += f"{AllItems['items'][item]['name']} x1\n"
 
-    if JsonDetails[str(message.author.id)]['inventory'][axeItem[0]]['durability'] == 0:
-        ret += "Sadly your axe broke"
-        del JsonDetails[str(message.author.id)]['inventory'][axeItem[0]]
-
+    if utility.GetUserItem(message.author.id, axeItem[0])[1]['durability'] == 0:
+        ret += "Sadly your pickaxe broke"
+        utility.TakeUserItem(message.author.id, axeItem[0])
     else:
-        ret += f"Your axe now has {JsonDetails[str(message.author.id)]['inventory'][axeItem[0]]['durability']} uses left"
-
-    #Write the changes back to disk
-    with open("userDetails.json", "w") as details:
-        details.write(json.dumps(JsonDetails))
+        ret += f"Your pickaxe now has {utility.GetUserItem(message.author.id, axeItem[0])[1]['durability']} uses left"
 
     await message.channel.send(ret)
 
 async def Smelt(message: discord.Message) -> None:
+    if not utility.UserHasAccount(message.author.id):
+        await message.channel.send(f"{message.author.name}, you don't have an account yet. Run `{config.CommandPrefix}account` to set one up, then try this command again")
+        return
+
     #check the user passed in an item
     if len(message.content.split(' ')) != 2:
         await message.channel.send(f":x: Please pass in one item to be smelted")
@@ -132,61 +118,47 @@ async def Smelt(message: discord.Message) -> None:
 
     itemName = message.content.split(' ')[1]
 
-
-    #check for user account
-    with open("userDetails.json", "r") as details: #Load the user details
-        JsonDetails = json.loads(details.read())
-
-    if str(message.author.id) not in JsonDetails:
-        await message.channel.send(f"{message.author.name}, you don't have an account yet. Run `{config.CommandPrefix}account` to set one up, then try this command again")
-        return
-
     #check user has wood
-    if 'wood' not in JsonDetails[str(message.author.id)]['inventory']:
+    if not utility.UserHasItem(message.author.id, 'wood'):
+    #if 'wood' not in JsonDetails[str(message.author.id)]['inventory']:
         await message.channel.send(f":x: You don't have any wood")
         return
 
     #check item exists
-    with open("items.json", "r") as details:
-        AllItems = json.loads(details.read())
-
-    if itemName not in AllItems['items']: #Check that the item exists
+    if not utility.CheckItemExists(itemName):
         await message.channel.send(f":x: Item \"{itemName}\" doesn't exist")
         return
 
+    itemDetails = utility.GetItemData(itemName)
+
     #check that the item is smeltable
-    if "smelted" not in AllItems['items'][itemName]['item_data']:
+    if "smelted" not in itemDetails['item_data']:
         await message.channel.send(f":x: You can't smelt {itemName}")
         return
 
     #check user has item
-    if itemName not in JsonDetails[str(message.author.id)]['inventory']:
+    if not utility.UserHasItem(str(message.author.id), itemName):
         await message.channel.send(f":x: You don't have any {itemName}")
         return
 
-    smeltingItem = AllItems['items'][itemName]
-    resultItemName = smeltingItem['item_data']['smelted']
+    resultItemName = itemDetails['item_data']['smelted']
+    resultItem = utility.GetItemData(resultItemName)
 
     #remove 1 of item
-    JsonDetails[str(message.author.id)]['inventory'][itemName]['quantity'] -= 1
-
-    if JsonDetails[str(message.author.id)]['inventory'][itemName]['quantity'] == 0: #if there are none left, remove the item from the inventory entirely
-        del JsonDetails[str(message.author.id)]['inventory'][itemName]
+    utility.TakeUserItem(message.author.id, itemName)
 
     #remove 1 wood
-    JsonDetails[str(message.author.id)]['inventory']['wood']['quantity'] -= 1
-
-    if JsonDetails[str(message.author.id)]['inventory']['wood']['quantity'] == 0: #if there are none left, remove the item from the inventory entirely
-        del JsonDetails[str(message.author.id)]['inventory']['wood']
+    utility.TakeUserItem(message.author.id, 'wood')
 
     #give one of smelt result
-    if resultItemName in JsonDetails[str(message.author.id)]['inventory']:
-        JsonDetails[str(message.author.id)]['inventory'][resultItemName]['quantity'] += 1
-    else:
-        JsonDetails[str(message.author.id)]['inventory'][resultItemName] = {"quantity": 1}
+    utility.GiveUserItem(str(message.author.id), resultItemName, 1)
     
-    await message.channel.send(f"You smelted {smeltingItem['name']} and got {AllItems['items'][resultItemName]['name']}")
+    await message.channel.send(f"You smelted {itemDetails['name']} and got {resultItem['name']}")
 
-    #Write all changes back to disk
-    with open("userDetails.json", "w") as details:
-        details.write(json.dumps(JsonDetails))
+async def Explore(message: discord.Message) -> None:
+    #check user has account
+    #check user has boots
+    #choose a random destination/no destination
+    #get loot
+    #write all changes back to disk
+    pass

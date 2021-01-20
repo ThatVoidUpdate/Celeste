@@ -21,6 +21,7 @@ commands = {
     "mine": resourceCommands.Mine,
     "chop": resourceCommands.Chop,
     "smelt": resourceCommands.Smelt,
+    "explore": resourceCommands.Explore,
     "hello": randomCommands.Hello,
     "help": randomCommands.Help,
     "account": accountCommands.CreateAccount,
